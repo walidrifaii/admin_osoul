@@ -1,0 +1,66 @@
+@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@100..900&family=Almarai:wght@300;400;700;800&display=swap");
+@import "tailwindcss";
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --maincolor: #303d36;
+}
+
+/* ── Your custom classes below ───────────────────────────────────────────────── */
+@layer components {
+  .table-container {
+    @apply w-full max-w-4xl bg-white shadow-md rounded-lg relative;
+  }
+  .table-cell {
+    @apply px-4 py-8  w-1/4 text-center align-middle;
+  }
+  .head {
+    @apply text-white font-semibold text-lg;
+  }
+  .table-header {
+    @apply bg-gray-100 font-semibold text-gray-700 w-full;
+  }
+  .tableRow {
+    @apply hover:bg-red-400! transition-colors flex-1 flex border-b border-gray-200;
+  }
+  .tableRowHead {
+    @apply transition-colors flex-1 flex bg-[#303d36] sticky top-0 z-10;
+  }
+  .tableRow:nth-child(even) {
+    @apply bg-gray-50;
+  }
+  .tableRow:nth-child(odd) {
+    @apply bg-white;
+  }
+  .table-footer {
+    @apply bg-gray-100 font-semibold text-gray-700;
+  }
+  .tableS {
+    @apply w-full text-left border-collapse h-[80vh] overflow-y-scroll;
+    scrollbar-width: none;
+  }
+}
+
+@theme inline {
+  --color-primary: var(--maincolor);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #f3f4f6;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: black;
+  font-family: "Almarai", sans-serif;
+}
+.arabic {
+  font-family: "Alexandria", sans-serif;
+}
