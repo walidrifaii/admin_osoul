@@ -5,40 +5,21 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 type AnnouncementForm = {
-  title_ar: string;
-  title_en: string;
-  body_ar: string;
-  body_en: string;
-};
-
-type PreviewLang = "ar" | "en";
-
-const emptyForm: AnnouncementForm = {
-  title_ar: "",
-  title_en: "",
-  body_ar: "",
-  body_en: "",
-};
-
-function PhoneMockup({
-  title,
-  body,
-  lang,
-}: {
   title: string;
   body: string;
-  lang: PreviewLang;
-}) {
-  const isRtl = lang === "ar";
-  const displayTitle =
-    title.trim() || (isRtl ? "عنوان الإشعار" : "Notification title");
+};
+
+const emptyForm: AnnouncementForm = {
+  title: "",
+  body: "",
+};
+
+function PhoneMockup({ title, body }: { title: string; body: string }) {
+  const displayTitle = title.trim() || "عنوان الإشعار";
   const displayBody =
-    body.trim() ||
-    (isRtl
-      ? "نص الإشعار يظهر هنا أثناء الكتابة..."
-      : "Notification text appears here as you type...");
+    body.trim() || "نص الإشعار يظهر هنا أثناء الكتابة...";
   const now = new Date();
-  const time = now.toLocaleTimeString(isRtl ? "ar-QA" : "en-US", {
+  const time = now.toLocaleTimeString("ar-QA", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -58,15 +39,9 @@ function PhoneMockup({
         <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900">
           <div className="absolute left-1/2 top-3 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-black" />
 
-          <div
-            className={`absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 pt-3 text-[11px] font-medium text-white ${
-              isRtl ? "flex-row-reverse" : ""
-            }`}
-          >
+          <div className="absolute inset-x-0 top-0 z-10 flex flex-row-reverse items-center justify-between px-6 pt-3 text-[11px] font-medium text-white">
             <span>{time}</span>
-            <div
-              className={`flex items-center gap-1 ${isRtl ? "flex-row-reverse" : ""}`}
-            >
+            <div className="flex flex-row-reverse items-center gap-1">
               <span className="text-[10px]">5G</span>
               <div className="flex h-2.5 items-end gap-0.5">
                 <span className="h-1 w-0.5 rounded-sm bg-white" />
@@ -86,7 +61,7 @@ function PhoneMockup({
           <div className="mt-16 text-center text-white">
             <p className="text-5xl font-light tracking-tight">{time}</p>
             <p className="mt-1 text-xs text-white/70">
-              {now.toLocaleDateString(isRtl ? "ar-QA" : "en-US", {
+              {now.toLocaleDateString("ar-QA", {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
@@ -96,7 +71,7 @@ function PhoneMockup({
 
           <div className="absolute inset-x-3 top-[9.5rem] z-30">
             <div
-              dir={isRtl ? "rtl" : "ltr"}
+              dir="rtl"
               className={`rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur-md transition-all duration-200 ${
                 title.trim() || body.trim()
                   ? "translate-y-0 opacity-100"
@@ -112,9 +87,7 @@ function PhoneMockup({
                     <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
                       Osoul
                     </p>
-                    <span className="shrink-0 text-[10px] text-zinc-400">
-                      {isRtl ? "الآن" : "now"}
-                    </span>
+                    <span className="shrink-0 text-[10px] text-zinc-400">الآن</span>
                   </div>
                 </div>
               </div>
@@ -146,7 +119,6 @@ function PhoneMockup({
 export default function AnnouncementsPage() {
   const router = useRouter();
   const [form, setForm] = useState<AnnouncementForm>(emptyForm);
-  const [previewLang, setPreviewLang] = useState<PreviewLang>("ar");
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -206,9 +178,6 @@ export default function AnnouncementsPage() {
     }
   };
 
-  const previewTitle = previewLang === "ar" ? form.title_ar : form.title_en;
-  const previewBody = previewLang === "ar" ? form.body_ar : form.body_en;
-
   return (
     <div
       className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 md:p-8"
@@ -219,51 +188,20 @@ export default function AnnouncementsPage() {
           الإعلانات
         </h1>
         <p className="mb-6 text-xs leading-relaxed text-gray-600 sm:mb-8 sm:text-sm">
-          اكتب إشعارك بالعربية والإنجليزية، وشاهده مباشرة على هاتف وهمي قبل
-          الإرسال لجميع المستخدمين.
+          اكتب إشعارك بالعربية وشاهده مباشرة على هاتف وهمي قبل الإرسال لجميع
+          المستخدمين.
         </p>
 
         <div
           className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8"
           dir="ltr"
         >
-          {/* Phone — fixed size, top on mobile / left on desktop */}
           <div className="flex w-full shrink-0 justify-center overflow-x-auto pb-2 xl:w-auto xl:overflow-visible xl:pb-0">
-            <div className="flex flex-col items-center gap-4 xl:sticky xl:top-6">
-              <div className="flex rounded-full bg-white p-1 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => setPreviewLang("ar")}
-                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                    previewLang === "ar"
-                      ? "bg-[#303d36] text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  عربي
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewLang("en")}
-                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                    previewLang === "en"
-                      ? "bg-[#303d36] text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  English
-                </button>
-              </div>
-
-              <PhoneMockup
-                title={previewTitle}
-                body={previewBody}
-                lang={previewLang}
-              />
+            <div className="xl:sticky xl:top-6">
+              <PhoneMockup title={form.title} body={form.body} />
             </div>
           </div>
 
-          {/* Form */}
           <form
             onSubmit={handleSubmit}
             className="min-w-0 w-full flex-1 space-y-4 rounded-xl bg-white p-4 shadow-md sm:space-y-5 sm:p-6"
@@ -271,22 +209,18 @@ export default function AnnouncementsPage() {
           >
             <div>
               <label
-                htmlFor="title_ar"
+                htmlFor="title"
                 className="mb-2 block text-sm font-medium text-gray-700"
               >
-                العنوان (عربي)
+                العنوان
               </label>
               <input
-                id="title_ar"
+                id="title"
                 type="text"
-                value={form.title_ar}
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    title_ar: event.target.value,
-                  }));
-                  setPreviewLang("ar");
-                }}
+                value={form.title}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, title: event.target.value }))
+                }
                 placeholder="مثال: إعلان من أصول"
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-right outline-none focus:border-[#303d36] focus:bg-white"
                 required
@@ -295,74 +229,20 @@ export default function AnnouncementsPage() {
 
             <div>
               <label
-                htmlFor="body_ar"
+                htmlFor="body"
                 className="mb-2 block text-sm font-medium text-gray-700"
               >
-                نص الإعلان (عربي)
+                نص الإعلان
               </label>
               <textarea
-                id="body_ar"
-                rows={4}
-                value={form.body_ar}
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    body_ar: event.target.value,
-                  }));
-                  setPreviewLang("ar");
-                }}
+                id="body"
+                rows={5}
+                value={form.body}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, body: event.target.value }))
+                }
                 placeholder="اكتب نص الإشعار بالعربية..."
                 className="w-full resize-y rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-right outline-none focus:border-[#303d36] focus:bg-white"
-                required
-              />
-            </div>
-
-            <div className="border-t border-gray-100 pt-5">
-              <label
-                htmlFor="title_en"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                العنوان (English)
-              </label>
-              <input
-                id="title_en"
-                type="text"
-                dir="ltr"
-                value={form.title_en}
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    title_en: event.target.value,
-                  }));
-                  setPreviewLang("en");
-                }}
-                placeholder="e.g. Announcement from Osoul"
-                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-left outline-none focus:border-[#303d36] focus:bg-white"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="body_en"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                نص الإعلان (English)
-              </label>
-              <textarea
-                id="body_en"
-                rows={4}
-                dir="ltr"
-                value={form.body_en}
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    body_en: event.target.value,
-                  }));
-                  setPreviewLang("en");
-                }}
-                placeholder="Write the notification in English..."
-                className="w-full resize-y rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-left outline-none focus:border-[#303d36] focus:bg-white"
                 required
               />
             </div>
