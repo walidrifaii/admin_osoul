@@ -31,6 +31,10 @@ export default function Sidebar() {
       label: "المنشورات",
     },
     {
+      href: "/dashboard/announcements",
+      label: "الإعلانات",
+    },
+    {
       href: "/dashboard/settings",
       label: "إعدادات التطبيق",
     },
