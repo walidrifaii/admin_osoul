@@ -12,6 +12,7 @@ export interface ListingCardProps {
   companyName: string;
   categoryTitle: string;
   onDelete?: () => void;
+  onOpen?: () => void;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({
@@ -22,6 +23,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
   companyName,
   categoryTitle,
   onDelete,
+  onOpen,
 }) => {
   console.log("ListingCard rendered with props:", imageUrl);
   return (
@@ -32,14 +34,22 @@ export const ListingCard: React.FC<ListingCardProps> = ({
       {/* Delete Button */}
 
       <button
-        onClick={onDelete}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete?.();
+        }}
         className="absolute top-3 left-3 z-10 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-all duration-200"
         aria-label="حذف الإعلان"
       >
         <Trash2 className="w-4 h-4" />
       </button>
 
-      <div className="flex h-[270px] overflow-hidden">
+      <div
+        className="flex h-[270px] overflow-hidden cursor-pointer"
+        onClick={onOpen}
+        role={onOpen ? "button" : undefined}
+      >
         {/* Image Section */}
         <div className="relative flex-shrink-0">
           <Image
@@ -105,16 +115,20 @@ export const ListingCard: React.FC<ListingCardProps> = ({
           {/* Action Buttons */}
           <div className="flex gap-2 pt-3 border-t border-gray-100">
             <button
+              type="button"
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
                 window.open(`https://wa.me/${phoneNumber}`, "_blank");
               }}
             >
               ارسال رسالة
             </button>
             <button
+              type="button"
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
                 window.open(`tel:${phoneNumber}`);
               }}
             >

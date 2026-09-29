@@ -2,58 +2,87 @@
 
 import { useEffect, useState } from "react";
 import { ListingCard } from "@/(component)/listingCard/Card";
-import { mapIdToTitle } from "@/utilities/mappingIds";
+import { categoryOptions, mapIdToTitle } from "@/utilities/mappingIds";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/constants/system";
 
+type Listing = {
+  id: string;
+  imageUrl: string;
+  publisherName: string;
+  phoneNumber: string;
+  commercialRegNo: string;
+  companyName: string;
+  categoryTitle: string;
+};
+
+function authHeaders(): HeadersInit | null {
+  const token = localStorage.getItem("token");
+  if (!token || token === "null" || token === "undefined") {
+    return null;
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export default function Home() {
   const router = useRouter();
-  const [listings, setListings] = useState<
-    Array<{
-      id: number;
-      imageUrl: string;
-      publisherName: string;
-      phoneNumber: string;
-      commercialRegNo: string;
-      companyName: string;
-      categoryTitle: string;
-    }>
-  >([]);
-  const handleDelete = async (id: number) => {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا الإعلان؟")) {
+      return;
+    }
+
+    const headers = authHeaders();
+    if (!headers) {
+      localStorage.removeItem("token");
+      router.push("/");
+      return;
+    }
+
     try {
       const response = await fetch(
-        `${API_BASE_URL}/delete-post?post_id=${id}&user_id=801ae98c-66a3-40b6-a34b-9192d248636f`,
+        `${API_BASE_URL}/delete-post?post_id=${encodeURIComponent(id)}`,
         {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers,
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        router.push("/");
+        return;
       }
 
-      const data = await response.json();
-      console.log("Delete response:", data);
-      if (confirm("هل أنت متأكد من حذف هذا الإعلان؟")) {
-        setListings(listings.filter((listing) => listing.id !== id));
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => null);
+        throw new Error(errBody?.message || "Network response was not ok");
       }
+
+      setListings((prev) => prev.filter((listing) => listing.id !== id));
     } catch (error) {
       console.error("Error deleting post:", error);
+      alert("تعذر حذف الإعلان");
     }
   };
 
   useEffect(() => {
     const fetchPosts = async () => {
+      const headers = authHeaders();
+      if (!headers) {
+        localStorage.removeItem("token");
+        router.push("/");
+        return;
+      }
+
       try {
-        const response = await fetch(`${API_BASE_URL}/get-posts`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await fetch(`${API_BASE_URL}/get-posts`, { headers });
         if (response.status === 401) {
           localStorage.removeItem("token");
           router.push("/");
@@ -65,8 +94,9 @@ export default function Home() {
         const data = await response.json();
         setListings(
           Array.isArray(data)
-              ? data.map((item: {
-                  id: number;
+            ? data.map(
+                (item: {
+                  id: string | number;
                   image: string | null;
                   user_full_name_ar: string;
                   phone: string;
@@ -74,14 +104,15 @@ export default function Home() {
                   title: string;
                   categorey: number;
                 }) => ({
-                id: item.id,
-                imageUrl: item.image || "/logo.png",
-                publisherName: item.user_full_name_ar,
-                phoneNumber: item.phone,
-                commercialRegNo: item.commercial_reg,
-                companyName: item.title,
-                categoryTitle: mapIdToTitle(item.categorey),
-              }))
+                  id: String(item.id),
+                  imageUrl: item.image || "/logo.png",
+                  publisherName: item.user_full_name_ar,
+                  phoneNumber: item.phone,
+                  commercialRegNo: item.commercial_reg,
+                  companyName: item.title,
+                  categoryTitle: mapIdToTitle(item.categorey),
+                })
+              )
             : []
         );
       } catch (error) {
@@ -89,13 +120,25 @@ export default function Home() {
         setListings([]);
       }
     };
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/");
-    } else {
-      fetchPosts();
-    }
+
+    fetchPosts();
   }, [router]);
+
+  const filtered = listings.filter((listing) => {
+    const matchesCategory =
+      category === "all" || listing.categoryTitle === category;
+    const haystack = [
+      listing.publisherName,
+      listing.phoneNumber,
+      listing.commercialRegNo,
+      listing.companyName,
+      listing.categoryTitle,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return matchesCategory && haystack.includes(query.trim().toLowerCase());
+  });
+
   return (
     <div
       className="min-h-screen bg-gray-50 p-6"
@@ -106,18 +149,31 @@ export default function Home() {
         <h1 className="text-3xl text-center font-bold text-gray-900  mb-8">
           قائمة الإعلانات
         </h1>
-        {/* <div className="mb-6 flex justify-center">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <input
-            type="text"
-            placeholder="ابحث عن اسم الشركة أو الناشر..."
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="بحث بالاسم أو الهاتف أو السجل أو العنوان"
+            className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
-        </div> */}
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
+          >
+            <option value="all">كل التصنيفات</option>
+            {categoryOptions.map((option) => (
+              <option key={option.id} value={option.title}>
+                {option.title}
+              </option>
+            ))}
+          </select>
+        </div>
         <div
           className="space-y-4 overflow-y-scroll max-h-[80vh] w-full p-4 px-8"
           style={{ scrollbarWidth: "none" }}
         >
-          {listings.map((listing) => (
+          {filtered.map((listing) => (
             <ListingCard
               key={listing.id}
               imageUrl={listing.imageUrl}
@@ -127,11 +183,12 @@ export default function Home() {
               companyName={listing.companyName}
               categoryTitle={listing.categoryTitle}
               onDelete={() => handleDelete(listing.id)}
+              onOpen={() => router.push(`/dashboard/Listings/${listing.id}`)}
             />
           ))}
         </div>
 
-        {listings.length === 0 && (
+        {filtered.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg">لا توجد إعلانات متاحة</div>
           </div>

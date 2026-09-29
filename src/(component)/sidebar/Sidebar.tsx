@@ -51,7 +51,8 @@ export default function Sidebar() {
 
           <ul className="mt-4 space-y-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive =
+                pathname === link.href || pathname.startsWith(`${link.href}/`);
 
               return (
                 <li

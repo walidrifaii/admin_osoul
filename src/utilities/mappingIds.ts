@@ -34,3 +34,45 @@ const idTitleMap: Record<number, string> = {
 export function mapIdToTitle(id: number): string {
   return idTitleMap[id];
 }
+
+const cityMap: Record<number, string> = {
+  1: "الدوحة",
+  2: "الريان",
+  3: "أم صلال",
+  4: "الخور والذخيرة",
+  5: "الوكرة",
+  6: "الضَّعاين",
+  7: "الْشَّمال",
+  8: "الشحانية",
+};
+
+const saleTypeMap: Record<number, string> = {
+  1: "ايجار",
+  2: "بيع",
+};
+
+const conditionMap: Record<number, string> = {
+  1: "جديد",
+  2: "مستعمل",
+  3: "قديم",
+};
+
+export function mapCity(id: number | null | undefined): string {
+  if (id == null) return "—";
+  return cityMap[Number(id)] ?? "—";
+}
+
+export function mapSaleType(id: number | null | undefined): string {
+  if (id == null) return "—";
+  return saleTypeMap[Number(id)] ?? "—";
+}
+
+export function mapCondition(id: number | null | undefined): string {
+  if (id == null) return "—";
+  return conditionMap[Number(id)] ?? "—";
+}
+
+export const categoryOptions = Object.entries(idTitleMap).map(([id, title]) => ({
+  id: Number(id),
+  title,
+}));
