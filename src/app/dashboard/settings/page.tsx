@@ -27,6 +27,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const authHeaders = () => ({
     "Content-Type": "application/json",
@@ -137,6 +145,7 @@ export default function SettingsPage() {
         {loading ? (
           <p className="text-gray-600">جاري تحميل الإعدادات...</p>
         ) : (
+          <>
           <form
             onSubmit={handleSubmit}
             className="space-y-5 rounded-xl bg-white p-6 shadow-md"
@@ -283,6 +292,132 @@ export default function SettingsPage() {
               {saving ? "جاري الحفظ..." : "حفظ الإعدادات"}
             </button>
           </form>
+
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setPasswordMessage("");
+              setPasswordError("");
+              if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                setPasswordError("كلمة المرور الجديدة غير متطابقة");
+                return;
+              }
+              if (passwordForm.newPassword.length < 6) {
+                setPasswordError("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل");
+                return;
+              }
+              setChangingPassword(true);
+              try {
+                const response = await fetch(`${API_BASE_URL}/change-admin-password`, {
+                  method: "POST",
+                  headers: authHeaders(),
+                  body: JSON.stringify({
+                    currentPassword: passwordForm.currentPassword,
+                    newPassword: passwordForm.newPassword,
+                  }),
+                });
+                if (response.status === 401) {
+                  const data = await response.json().catch(() => null);
+                  if (data?.message === "Current password is incorrect") {
+                    setPasswordError("كلمة المرور الحالية غير صحيحة");
+                    return;
+                  }
+                  localStorage.removeItem("token");
+                  router.push("/");
+                  return;
+                }
+                const data = await response.json().catch(() => null);
+                if (!response.ok) {
+                  setPasswordError(data?.message || "تعذر تغيير كلمة المرور");
+                  return;
+                }
+                setPasswordForm({
+                  currentPassword: "",
+                  newPassword: "",
+                  confirmPassword: "",
+                });
+                setPasswordMessage("تم تغيير كلمة المرور");
+              } catch (changeError) {
+                console.error(changeError);
+                setPasswordError("تعذر تغيير كلمة المرور");
+              } finally {
+                setChangingPassword(false);
+              }
+            }}
+            className="mt-6 space-y-4 rounded-xl bg-white p-6 shadow-md"
+          >
+            <h2 className="text-lg font-bold text-[#303d36]">تغيير كلمة المرور</h2>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="currentPassword">
+                كلمة المرور الحالية
+              </label>
+              <input
+                id="currentPassword"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    currentPassword: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:bg-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="newPassword">
+                كلمة المرور الجديدة
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    newPassword: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:bg-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="confirmPassword">
+                تأكيد كلمة المرور
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:bg-white"
+                required
+              />
+            </div>
+            {passwordError ? (
+              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{passwordError}</p>
+            ) : null}
+            {passwordMessage ? (
+              <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                {passwordMessage}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              disabled={changingPassword}
+              className="w-full rounded-lg bg-[#303d36] px-4 py-3 font-semibold text-white disabled:opacity-60"
+            >
+              {changingPassword ? "جاري التغيير..." : "تغيير كلمة المرور"}
+            </button>
+          </form>
+          </>
         )}
       </div>
     </div>

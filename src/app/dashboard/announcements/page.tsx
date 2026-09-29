@@ -122,13 +122,45 @@ export default function AnnouncementsPage() {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [history, setHistory] = useState<
+    { id: number; title: string; body: string; recipient_count: number; created_at: string }[]
+  >([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const loadHistory = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/announcements?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        router.push("/");
+        return;
+      }
+      if (!response.ok) return;
+      const data = await response.json();
+      setHistory(Array.isArray(data.items) ? data.items : []);
+      setTotalPages(data.totalPages || 1);
+      setTotal(data.total || 0);
+    } catch (loadError) {
+      console.error(loadError);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.replace("/");
+      return;
     }
-  }, [router]);
+    loadHistory();
+  }, [router, page]);
 
   const authHeaders = () => ({
     "Content-Type": "application/json",
@@ -169,6 +201,12 @@ export default function AnnouncementsPage() {
         setMessage("لا يوجد مستخدمون لديهم رمز إشعارات مسجل حالياً.");
       } else {
         setMessage("تم إرسال الإعلان بنجاح");
+      }
+      setForm(emptyForm);
+      if (page === 1) {
+        loadHistory();
+      } else {
+        setPage(1);
       }
     } catch (submitError) {
       console.error(submitError);
@@ -268,6 +306,64 @@ export default function AnnouncementsPage() {
             </button>
           </form>
         </div>
+
+        <section className="mt-8">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold text-[#303d36]">الإشعارات السابقة</h2>
+            <span className="text-xs text-gray-500">{total} إشعار</span>
+          </div>
+          {history.length === 0 ? (
+            <p className="rounded-xl bg-white px-4 py-6 text-sm text-gray-500 shadow-md">
+              لا توجد إشعارات مرسلة بعد
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl bg-white shadow-md">
+              <table className="w-full min-w-[640px] text-right text-sm">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">العنوان</th>
+                    <th className="px-4 py-3 font-medium">النص</th>
+                    <th className="px-4 py-3 font-medium">المستلمون</th>
+                    <th className="px-4 py-3 font-medium">التاريخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item) => (
+                    <tr key={item.id} className="border-t border-gray-100">
+                      <td className="px-4 py-3 font-medium text-gray-900">{item.title}</td>
+                      <td className="max-w-md px-4 py-3 text-gray-700">{item.body}</td>
+                      <td className="px-4 py-3 text-gray-700">{item.recipient_count}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-500">
+                        {new Date(item.created_at).toLocaleString("ar-QA")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => current - 1)}
+                  className="rounded-lg bg-gray-100 px-4 py-2 text-sm disabled:opacity-40"
+                >
+                  السابق
+                </button>
+                <span className="text-sm text-gray-600">
+                  صفحة {page} من {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((current) => current + 1)}
+                  className="rounded-lg bg-gray-100 px-4 py-2 text-sm disabled:opacity-40"
+                >
+                  التالي
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -32,11 +32,12 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الإعلان؟")) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
 
     const headers = authHeaders();
     if (!headers) {
@@ -45,6 +46,7 @@ export default function Home() {
       return;
     }
 
+    setDeleting(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/delete-post?post_id=${encodeURIComponent(id)}`,
@@ -66,9 +68,12 @@ export default function Home() {
       }
 
       setListings((prev) => prev.filter((listing) => listing.id !== id));
+      setPendingDeleteId(null);
     } catch (error) {
       console.error("Error deleting post:", error);
       alert("تعذر حذف الإعلان");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -188,7 +193,7 @@ export default function Home() {
               commercialRegNo={listing.commercialRegNo}
               companyName={listing.companyName}
               categoryTitle={listing.categoryTitle}
-              onDelete={() => handleDelete(listing.id)}
+              onDelete={() => setPendingDeleteId(listing.id)}
               onOpen={() => router.push(`/dashboard/Listings/${listing.id}`)}
             />
           ))}
@@ -200,6 +205,35 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {pendingDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900">حذف الإعلان</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {deleting ? "جاري الحذف..." : "حذف"}
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setPendingDeleteId(null)}
+                className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

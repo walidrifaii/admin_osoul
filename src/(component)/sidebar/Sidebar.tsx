@@ -4,7 +4,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Sidebar() {
   const [auth, setAuth] = React.useState(false);
@@ -16,6 +16,13 @@ export default function Sidebar() {
     }
   }, []);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setAuth(false);
+    router.push("/");
+  };
 
   const navLinks = [
     {
@@ -44,7 +51,7 @@ export default function Sidebar() {
   } else {
     return (
       <div className="h-full w-64 shrink-0 text-white shadow-lg">
-        <nav className="bg-gray-800 h-full w-full" dir="rtl">
+        <nav className="flex h-full w-full flex-col bg-gray-800" dir="rtl">
           <div className="p-4 text-white">
             <h1 className="text-xl font-bold">لوحة التحكم</h1>
           </div>
@@ -70,6 +77,15 @@ export default function Sidebar() {
               );
             })}
           </ul>
+          <div className="mt-auto p-4">
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              تسجيل الخروج
+            </button>
+          </div>
         </nav>
       </div>
     );
