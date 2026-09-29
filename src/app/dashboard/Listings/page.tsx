@@ -141,8 +141,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 p-6"
-      style={{ flexGrow: 2 }}
+      className="min-h-full bg-gray-50 px-6 pb-16 pt-6"
       dir="rtl"
     >
       <div className="max-w-4xl mx-auto">
@@ -156,10 +155,11 @@ export default function Home() {
             placeholder="بحث بالاسم أو الهاتف أو السجل أو العنوان"
             className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
+          <div className="relative sm:min-w-[220px]">
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
+            className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-emerald-500"
           >
             <option value="all">كل التصنيفات</option>
             {categoryOptions.map((option) => (
@@ -168,6 +168,12 @@ export default function Home() {
               </option>
             ))}
           </select>
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          </div>
         </div>
         <div
           className="space-y-4 overflow-y-scroll max-h-[80vh] w-full p-4 px-8"

@@ -55,6 +55,7 @@ export default function ListingDetailsPage() {
   const [post, setPost] = useState<PostDetails | null>(null);
   const [error, setError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -88,6 +89,24 @@ export default function ListingDetailsPage() {
     if (params.id) load();
   }, [params.id, router]);
 
+  const imageCount = post?.images?.length ?? 0;
+
+  const showImage = (index: number) => {
+    if (imageCount === 0) return;
+    setActiveImage((index + imageCount) % imageCount);
+  };
+
+  useEffect(() => {
+    if (!viewerOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setViewerOpen(false);
+      if (event.key === "ArrowLeft") showImage(activeImage + 1);
+      if (event.key === "ArrowRight") showImage(activeImage - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewerOpen, activeImage, imageCount]);
+
   const fields = post
     ? [
         ["التصنيف", mapIdToTitle(Number(post.categorey)) || "—"],
@@ -118,7 +137,7 @@ export default function ListingDetailsPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6" dir="rtl" style={{ flexGrow: 2 }}>
+    <div className="min-h-full bg-gray-50 px-6 pb-16 pt-6" dir="rtl">
       <div className="mx-auto max-w-4xl">
         <button
           type="button"
@@ -138,11 +157,19 @@ export default function ListingDetailsPage() {
             {post.images?.length > 0 && (
               <div className="bg-gray-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.images[activeImage] || post.images[0]}
-                  alt=""
-                  className="h-80 w-full object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => setViewerOpen(true)}
+                  className="block w-full"
+                  aria-label="عرض الصورة"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.images[activeImage] || post.images[0]}
+                    alt=""
+                    className="h-80 w-full cursor-zoom-in object-cover"
+                  />
+                </button>
                 {post.images.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto p-3">
                     {post.images.map((image, index) => (
@@ -184,6 +211,57 @@ export default function ListingDetailsPage() {
           </div>
         )}
       </div>
+
+      {viewerOpen && post && imageCount > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setViewerOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setViewerOpen(false)}
+            className="absolute left-4 top-4 rounded-full bg-white/15 px-3 py-2 text-sm text-white"
+          >
+            إغلاق
+          </button>
+          {imageCount > 1 && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                showImage(activeImage + 1);
+              }}
+              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 px-4 py-3 text-2xl text-white"
+              aria-label="الصورة السابقة"
+            >
+              ‹
+            </button>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.images[activeImage]}
+            alt=""
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[90vh] w-full max-w-6xl object-contain"
+          />
+          {imageCount > 1 && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                showImage(activeImage - 1);
+              }}
+              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 px-4 py-3 text-2xl text-white"
+              aria-label="الصورة التالية"
+            >
+              ›
+            </button>
+          )}
+          <p className="absolute bottom-4 text-sm text-white">
+            {activeImage + 1} / {imageCount}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

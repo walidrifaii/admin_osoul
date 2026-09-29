@@ -43,7 +43,7 @@ export default function Sidebar() {
     return null;
   } else {
     return (
-      <div className="h-screen inline-block text-white shadow-lg w-[25vh]">
+      <div className="h-full w-64 shrink-0 text-white shadow-lg">
         <nav className="bg-gray-800 h-full w-full" dir="rtl">
           <div className="p-4 text-white">
             <h1 className="text-xl font-bold">لوحة التحكم</h1>
